@@ -1,0 +1,130 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  phone         String?
+  passwordHash  String
+  name          String
+  role          String         @default("CUSTOMER")
+  createdAt     DateTime       @default(now())
+  inquiries     Inquiry[]
+  alerts        StockAlert[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  slug  String @unique
+  parts Part[]
+}
+
+model Part {
+  id              Int                 @id @default(autoincrement())
+  sku             String              @unique
+  name            String
+  description     String
+  priceRetail     Int
+  stock           Int                 @default(0)
+  categoryId      Int
+  category        Category            @relation(fields: [categoryId], references: [id])
+  photos          Photo[]
+  oemCodes        OemCode[]
+  compatibilities PartCompatibility[]
+  alerts          StockAlert[]
+  inquiryItems    InquiryItem[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([name])
+  @@index([categoryId])
+}
+
+model OemCode {
+  id     Int     @id @default(autoincrement())
+  code   String
+  brand  String?
+  partId Int
+  part   Part    @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@unique([code, brand])
+  @@index([code])
+}
+
+model Photo {
+  id        Int     @id @default(autoincrement())
+  url       String
+  isPrimary Boolean @default(false)
+  partId    Int
+  part      Part    @relation(fields: [partId], references: [id], onDelete: Cascade)
+}
+
+model Machine {
+  id              Int                 @id @default(autoincrement())
+  brand           String
+  model           String
+  yearFrom        Int?
+  yearTo          Int?
+  compatibilities PartCompatibility[]
+
+  @@unique([brand, model])
+}
+
+model PartCompatibility {
+  partId    Int
+  machineId Int
+  note      String?
+  part      Part    @relation(fields: [partId], references: [id], onDelete: Cascade)
+  machine   Machine @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  @@id([partId, machineId])
+}
+
+model StockAlert {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  partId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  part      Part     @relation(fields: [partId], references: [id], onDelete: Cascade)
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, partId])
+}
+
+model Inquiry {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  user      User          @relation(fields: [userId], references: [id])
+  status    String        @default("NEW")
+  message   String?
+  items     InquiryItem[]
+  createdAt DateTime      @default(now())
+}
+
+model InquiryItem {
+  id        Int     @id @default(autoincrement())
+  inquiryId Int
+  partId    Int
+  quantity  Int     @default(1)
+  inquiry   Inquiry @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  part      Part    @relation(fields: [partId], references: [id])
+}
