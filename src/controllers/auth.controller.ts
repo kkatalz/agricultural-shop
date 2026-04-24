@@ -1,48 +1,60 @@
-import { RequestHandler } from 'express';
-import {
-  registerSchema,
-  loginSchema,
-  refreshSchema,
-  logoutSchema,
-} from '../schemas/auth.schema';
+import type { Request, Response, NextFunction } from 'express';
 import * as authService from '../services/auth.service';
+import type {
+  RegisterDto,
+  LoginDto,
+  RefreshDto,
+  LogoutDto,
+} from '../schemas/auth.schema';
 
-export const register: RequestHandler = async (req, res, next) => {
+export async function register(
+  req: Request<{}, {}, RegisterDto>,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const dto = registerSchema.parse(req.body);
-    const result = await authService.register(dto);
+    const result = await authService.register(req.body);
     res.status(201).json(result);
   } catch (err) {
     next(err);
   }
-};
+}
 
-export const login: RequestHandler = async (req, res, next) => {
+export async function login(
+  req: Request<{}, {}, LoginDto>,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const dto = loginSchema.parse(req.body);
-    const result = await authService.login(dto);
+    const result = await authService.login(req.body);
     res.json(result);
   } catch (err) {
     next(err);
   }
-};
+}
 
-export const refresh: RequestHandler = async (req, res, next) => {
+export async function refresh(
+  req: Request<{}, {}, RefreshDto>,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const dto = refreshSchema.parse(req.body);
-    const result = await authService.refresh(dto);
+    const result = await authService.refresh(req.body);
     res.json(result);
   } catch (err) {
     next(err);
   }
-};
+}
 
-export const logout: RequestHandler = async (req, res, next) => {
+export async function logout(
+  req: Request<{}, {}, LogoutDto>,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const dto = logoutSchema.parse(req.body);
-    await authService.logout(req.user!.id, dto);
+    await authService.logout(req.user!.id, req.body);
     res.status(204).end();
   } catch (err) {
     next(err);
   }
-};
+}
