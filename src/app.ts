@@ -1,15 +1,14 @@
 import express from 'express';
-import authRouter from './routes/auth';
-import { errorHandler } from './middleware/error';
+import routes from './routes';
+import { notFound, errorHandler } from './middleware/error';
 
-export const app = express();
+const app = express();
 
 app.use(express.json());
 
-app.get('/', (_req, res) => {
-  res.json({ status: 'ok', service: 'agricultural-shop-api' });
-});
+app.use('/api', routes);
 
-app.use('/auth', authRouter);
-
+app.use(notFound);
 app.use(errorHandler);
+
+export default app;
