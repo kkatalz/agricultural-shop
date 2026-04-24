@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import prisma from '../lib/prisma';
-import { HttpError } from '../lib/http-error';
+import { HttpError } from '../middleware/error';
 import {
   Role,
   signAccessToken,
