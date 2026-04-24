@@ -2,6 +2,7 @@ import express from 'express';
 import * as PartController from '../controllers/part.controller';
 import { validate } from '../middleware/validate';
 import { requireAuth, requireRole } from '../middleware/auth';
+import { uploadPhoto } from '../middleware/upload';
 import { createPartSchema, updatePartSchema } from '../schemas/part.schema';
 
 const router = express.Router();
@@ -31,6 +32,21 @@ router.delete(
   requireAuth,
   requireRole('ADMIN'),
   PartController.deletePart,
+);
+
+router.post(
+  '/:id/photos',
+  requireAuth,
+  requireRole('ADMIN'),
+  uploadPhoto.single('photo'),
+  PartController.uploadPhoto,
+);
+
+router.delete(
+  '/photos/:id',
+  requireAuth,
+  requireRole('ADMIN'),
+  PartController.deletePhoto,
 );
 
 export default router;

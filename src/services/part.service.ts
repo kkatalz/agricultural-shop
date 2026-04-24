@@ -1,5 +1,8 @@
+import fs from 'fs/promises';
+import path from 'path';
 import prisma from '../lib/prisma';
 import { HttpError } from '../middleware/error';
+import { UPLOADS_DIR } from '../middleware/upload';
 import type {
   CreatePartDto,
   UpdatePartDto,
@@ -25,7 +28,7 @@ export async function list(query: ListPartsQueryDto) {
           ]
         : undefined,
     },
-    include: { category: true, oemCodes: true },
+    include: { category: true, oemCodes: true, photos: true },
     orderBy: { createdAt: 'desc' },
   });
 }
@@ -36,6 +39,7 @@ export async function getById(id: number) {
     include: {
       category: true,
       oemCodes: true,
+      photos: true,
       compatibilities: { include: { machine: true } },
     },
   });
@@ -122,4 +126,44 @@ export async function remove(id: number) {
   }
 
   return prisma.part.delete({ where: { id } });
+}
+
+export async function addPhoto(
+  partId: number,
+  file: Express.Multer.File,
+  isPrimary: boolean,
+) {
+  const part = await prisma.part.findUnique({ where: { id: partId } });
+  if (!part) throw new HttpError(404, 'Part not found');
+
+  const url = `/uploads/${file.filename}`;
+
+  return prisma.$transaction(async (tx) => {
+    if (isPrimary) {
+      await tx.photo.updateMany({
+        where: { partId, isPrimary: true },
+        data: { isPrimary: false },
+      });
+    }
+    return tx.photo.create({
+      data: { url, isPrimary, partId },
+    });
+  });
+}
+
+export async function removePhoto(id: number) {
+  const photo = await prisma.photo.findUnique({ where: { id } });
+  if (!photo) throw new HttpError(404, 'Photo not found');
+
+  const deleted = await prisma.photo.delete({ where: { id } });
+
+  const filename = path.basename(photo.url);
+  const filePath = path.join(UPLOADS_DIR, filename);
+  try {
+    await fs.unlink(filePath);
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+  }
+
+  return deleted;
 }

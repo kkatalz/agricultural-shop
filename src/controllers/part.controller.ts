@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as PartService from '../services/part.service';
+import { HttpError } from '../middleware/error';
 import {
   listPartsQuerySchema,
   CreatePartDto,
@@ -75,6 +76,42 @@ export async function deletePart(
 ) {
   try {
     const data = await PartService.remove(Number(req.params.id));
+    res.json({ data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function uploadPhoto(
+  req: Request<{ id: string }>,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    if (!req.file)
+      throw new HttpError(400, 'No photo file provided (field name is: photo)');
+
+    const isPrimary =
+      req.body.isPrimary === 'true' || req.body.isPrimary === true;
+
+    const data = await PartService.addPhoto(
+      Number(req.params.id),
+      req.file,
+      isPrimary,
+    );
+    res.status(201).json({ data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deletePhoto(
+  req: Request<{ id: string }>,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const data = await PartService.removePhoto(Number(req.params.id));
     res.json({ data });
   } catch (err) {
     next(err);
