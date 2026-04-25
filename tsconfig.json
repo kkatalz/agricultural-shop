@@ -9,8 +9,8 @@
     // Папка для скомпільованих файлів
     "outDir": "./dist",
 
-    // Папка з вихідним кодом
-    "rootDir": "./src",
+    // Папка з вихідним кодом (repo root, бо seed.ts знаходиться в prisma/)
+    "rootDir": "./",
 
     // Генерувати source maps для debugging
     "sourceMap": true,
@@ -29,6 +29,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "../prisma/seed.ts"],
+  "include": ["src/**/*", "prisma/seed.ts"],
   "exclude": ["node_modules", "dist"]
 }
