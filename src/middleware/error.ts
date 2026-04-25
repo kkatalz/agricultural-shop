@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import multer from 'multer';
+import { Prisma } from '../generated/prisma/client';
 
 export class HttpError extends Error {
   constructor(
@@ -40,6 +41,23 @@ export function errorHandler(
         };
       }),
     });
+  }
+
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === 'P2002') {
+      const fields = (err.meta?.target as string[] | undefined)?.join(', ');
+      return res.status(409).json({
+        error: fields
+          ? `Unique constraint failed on: ${fields}`
+          : 'Unique constraint failed',
+      });
+    }
+    if (err.code === 'P2003') {
+      return res.status(400).json({ error: 'Invalid foreign key reference' });
+    }
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: 'Record not found' });
+    }
   }
 
   console.error(err);
