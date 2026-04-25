@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as CategoryService from '../services/category.service';
+import { parseId } from '../middleware/validate';
 import type {
   CreateCategoryDto,
   UpdateCategoryDto,
@@ -24,7 +25,7 @@ export async function getCategoryById(
   next: NextFunction,
 ) {
   try {
-    const data = await CategoryService.getById(Number(req.params.id));
+    const data = await CategoryService.getById(parseId(req.params.id));
     res.json({ data });
   } catch (err) {
     next(err);
@@ -50,7 +51,7 @@ export async function updateCategory(
   next: NextFunction,
 ) {
   try {
-    const data = await CategoryService.update(Number(req.params.id), req.body);
+    const data = await CategoryService.update(parseId(req.params.id), req.body);
     res.json({ data });
   } catch (err) {
     next(err);
@@ -63,7 +64,7 @@ export async function deleteCategory(
   next: NextFunction,
 ) {
   try {
-    const data = await CategoryService.remove(Number(req.params.id));
+    const data = await CategoryService.remove(parseId(req.params.id));
     res.json({ data });
   } catch (err) {
     next(err);

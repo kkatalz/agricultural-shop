@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as MachineService from '../services/machine.service';
+import { parseId } from '../middleware/validate';
 import {
   listMachinesQuerySchema,
   CreateMachineDto,
@@ -38,7 +39,7 @@ export async function getMachineParts(
   next: NextFunction,
 ) {
   try {
-    const data = await MachineService.listParts(Number(req.params.id));
+    const data = await MachineService.listParts(parseId(req.params.id));
     res.json({ data });
   } catch (err) {
     next(err);

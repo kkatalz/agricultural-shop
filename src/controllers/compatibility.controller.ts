@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as CompatibilityService from '../services/compatibility.service';
+import { parseId } from '../middleware/validate';
 import {
   listCompatibilitiesQuerySchema,
   CreateCompatibilityDto,
@@ -40,8 +41,8 @@ export async function updateCompatibility(
 ) {
   try {
     const data = await CompatibilityService.update(
-      Number(req.params.partId),
-      Number(req.params.machineId),
+      parseId(req.params.partId, 'partId'),
+      parseId(req.params.machineId, 'machineId'),
       req.body,
     );
     res.json({ data });
@@ -57,8 +58,8 @@ export async function deleteCompatibility(
 ) {
   try {
     const data = await CompatibilityService.remove(
-      Number(req.params.partId),
-      Number(req.params.machineId),
+      parseId(req.params.partId, 'partId'),
+      parseId(req.params.machineId, 'machineId'),
     );
     res.json({ data });
   } catch (err) {

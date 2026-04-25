@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as PartService from '../services/part.service';
 import { HttpError } from '../middleware/error';
+import { parseId } from '../middleware/validate';
 import {
   listPartsQuerySchema,
   CreatePartDto,
@@ -23,7 +24,7 @@ export async function getPartById(
   next: NextFunction,
 ) {
   try {
-    const data = await PartService.getById(Number(req.params.id));
+    const data = await PartService.getById(parseId(req.params.id));
     res.json({ data });
   } catch (err) {
     next(err);
@@ -62,7 +63,7 @@ export async function updatePart(
   next: NextFunction,
 ) {
   try {
-    const data = await PartService.update(Number(req.params.id), req.body);
+    const data = await PartService.update(parseId(req.params.id), req.body);
     res.json({ data });
   } catch (err) {
     next(err);
@@ -75,7 +76,7 @@ export async function deletePart(
   next: NextFunction,
 ) {
   try {
-    const data = await PartService.remove(Number(req.params.id));
+    const data = await PartService.remove(parseId(req.params.id));
     res.json({ data });
   } catch (err) {
     next(err);
@@ -95,7 +96,7 @@ export async function uploadPhoto(
       req.body.isPrimary === 'true' || req.body.isPrimary === true;
 
     const data = await PartService.addPhoto(
-      Number(req.params.id),
+      parseId(req.params.id),
       req.file,
       isPrimary,
     );
@@ -111,7 +112,7 @@ export async function deletePhoto(
   next: NextFunction,
 ) {
   try {
-    const data = await PartService.removePhoto(Number(req.params.id));
+    const data = await PartService.removePhoto(parseId(req.params.id));
     res.json({ data });
   } catch (err) {
     next(err);
