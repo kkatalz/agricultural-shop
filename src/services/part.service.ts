@@ -56,6 +56,25 @@ export async function findByOemCode(code: string) {
   });
 }
 
+async function assertOemCodesAvailable(
+  oemCodes: { code: string; brand?: string }[] | undefined,
+  excludePartId?: number,
+) {
+  if (!oemCodes?.length) return;
+
+  const dupes = await prisma.oemCode.findMany({
+    where: {
+      OR: oemCodes.map((o) => ({ code: o.code, brand: o.brand ?? null })),
+      ...(excludePartId !== undefined ? { partId: { not: excludePartId } } : {}),
+    },
+  });
+
+  if (dupes.length) {
+    const list = dupes.map((d) => `${d.code}/${d.brand ?? '-'}`).join(', ');
+    throw new HttpError(409, `OEM code(s) already exist: ${list}`);
+  }
+}
+
 export async function create(dto: CreatePartDto) {
   const existing = await prisma.part.findUnique({ where: { sku: dto.sku } });
   if (existing) throw new HttpError(409, 'Part with this SKU already exists');
@@ -66,6 +85,8 @@ export async function create(dto: CreatePartDto) {
   if (!category) throw new HttpError(400, 'Category not found');
 
   const { oemCodes, ...partData } = dto;
+
+  await assertOemCodesAvailable(oemCodes);
 
   return prisma.part.create({
     data: {
@@ -95,6 +116,8 @@ export async function update(id: number, dto: UpdatePartDto) {
   }
 
   const { oemCodes, ...partData } = dto;
+
+  await assertOemCodesAvailable(oemCodes, id);
 
   return prisma.$transaction(async (tx) => {
     if (oemCodes !== undefined) {
